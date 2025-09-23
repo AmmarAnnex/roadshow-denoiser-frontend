@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roadshow Studio v11a3b + Demucs - Professional Denoising</title>
+    <title>Roadshow Studio v11a3b + Facebook Denoiser - Professional Speech Enhancement</title>
     <style>
         @font-face {
             font-family: 'ABC Camera Plain';
@@ -106,7 +106,7 @@
             text-transform: uppercase;
         }
 
-        .demucs-badge {
+        .denoiser-badge {
             display: inline-block;
             background: var(--teal-secondary);
             color: var(--white-primary);
@@ -667,7 +667,7 @@
             <span class="logo-text">roadshow</span>
             <span class="logo-studio">studio</span>
         </div>
-        <div class="version">v11a3b epoch 346 <span class="demucs-badge">DEMUCS</span></div>
+        <div class="version">v11a3b epoch 346 <span class="denoiser-badge">FB DENOISER</span></div>
     </div>
 
     <!-- Model Status Indicator -->
@@ -716,8 +716,8 @@
             <div class="knobs-container">
                 <div class="knob-control">
                     <div class="knob-label">denoise</div>
-                    <div class="knob" id="denoiseKnob" data-value="0.3"></div>
-                    <div class="knob-value">0.3</div>
+                    <div class="knob" id="denoiseKnob" data-value="0.7"></div>
+                    <div class="knob-value">0.7</div>
                 </div>
                 <div class="knob-control">
                     <div class="knob-label">clarity</div>
@@ -731,7 +731,7 @@
                 </div>
             </div>
             
-            <button class="process-btn" id="processBtn">apply demucs + studio magic</button>
+            <button class="process-btn" id="processBtn">apply denoiser + studio magic</button>
         </div>
 
         <!-- Results Container -->
@@ -740,7 +740,7 @@
             
             <div class="ab-controls">
                 <button class="ab-button active" id="originalBtn">original</button>
-                <button class="ab-button" id="enhancedBtn">demucs + u87</button>
+                <button class="ab-button" id="enhancedBtn">denoised + u87</button>
             </div>
 
             <div class="player-controls">
@@ -759,7 +759,7 @@
     <!-- Processing Overlay -->
     <div class="processing-overlay" id="processingOverlay">
         <div class="processing-text">denoising & transforming...</div>
-        <div class="processing-subtext">Demucs → BigVGAN v11a3b</div>
+        <div class="processing-subtext">Facebook Denoiser → BigVGAN v11a3b</div>
         <div class="processing-progress">
             <div class="processing-progress-bar" id="progressBar"></div>
         </div>
@@ -775,7 +775,7 @@
     <input type="file" id="file-input" accept=".wav,.mp3,.m4a,.flac,.aac,.ogg,.webm">
 
     <script>
-        // API Configuration - Demucs server on port 8003
+        // API Configuration - Facebook Denoiser server on port 8003
         const IS_VERCEL = window.location.hostname.includes('vercel.app') || window.location.hostname === 'localhost';
         const API_URL = IS_VERCEL ? "/api" : "https://cdd65ozriziunh-8003.proxy.runpod.net";
         
@@ -810,10 +810,10 @@
                     
                     if (health.model_loaded && health.denoiser_loaded) {
                         modelStatus.classList.add('connected');
-                        modelStatusText.textContent = 'demucs + v11a3b ready';
+                        modelStatusText.textContent = 'denoiser + v11a3b ready';
                     } else if (health.model_loaded) {
                         modelStatus.classList.add('connected');
-                        modelStatusText.textContent = 'v11a3b ready (no demucs)';
+                        modelStatusText.textContent = 'v11a3b ready (no denoiser)';
                     } else {
                         modelStatus.classList.add('error');
                         modelStatusText.textContent = 'models not loaded';
@@ -1083,16 +1083,16 @@
             document.getElementById('controlsSection').style.display = 'block';
         }
 
-        // Process Button Handler - Demucs Version
+        // Process Button Handler - Facebook Denoiser Version
         function processAudio() {
-            console.log('Process button clicked - Demucs + v11a3b version');
+            console.log('Process button clicked - Facebook Denoiser + v11a3b version');
             
             if (!window.selectedFile && !window.recordedBlob) {
                 alert('Please record or upload audio first');
                 return;
             }
 
-            const denoise_intensity = parseFloat(document.getElementById('denoiseKnob').dataset.value);
+            const denoise_amount = parseFloat(document.getElementById('denoiseKnob').dataset.value);
             const clarity = parseFloat(document.getElementById('clarityKnob').dataset.value);
             const warmth = parseFloat(document.getElementById('warmthKnob').dataset.value);
 
@@ -1121,10 +1121,10 @@
                     formData.append('file', audioFile, audioFile.name || 'audio.m4a');
                     
                     console.log(`Sending to: ${API_URL}/process`);
-                    console.log(`Parameters: denoise=${denoise_intensity}, clarity=${clarity}, warmth=${warmth}`);
+                    console.log(`Parameters: denoise=${denoise_amount}, clarity=${clarity}, warmth=${warmth}`);
                     
                     const response = await fetch(
-                        `${API_URL}/process?denoise_intensity=${denoise_intensity}&clarity=${clarity}&warmth=${warmth}&use_denoiser=true`, 
+                        `${API_URL}/process?denoise_amount=${denoise_amount}&clarity=${clarity}&warmth=${warmth}&use_denoiser=true`, 
                         {
                             method: 'POST',
                             body: formData
@@ -1146,7 +1146,7 @@
                     const downloadUrl = `${API_URL}${result.download_url}`;
                     const previewUrl = `${API_URL}${result.preview_url}`;
                     
-                    console.log('Demucs applied:', result.denoiser_applied);
+                    console.log('Facebook Denoiser applied:', result.denoiser_applied);
                     console.log('Pipeline used:', result.pipeline);
                     
                     // Setup audio players
@@ -1162,7 +1162,7 @@
                     // Setup download
                     const downloadBtn = document.getElementById('downloadBtn');
                     downloadBtn.href = downloadUrl;
-                    downloadBtn.download = result.filename || 'roadshow_demucs.wav';
+                    downloadBtn.download = result.filename || 'roadshow_denoised.wav';
                     downloadBtn.onclick = null;
                     
                     // Wait for audio to load
@@ -1175,7 +1175,7 @@
                     modelStatus.classList.remove('processing');
                     modelStatus.classList.add('connected');
                     modelStatusText.textContent = result.denoiser_applied ? 
-                        'demucs + v11a3b applied' : 'v11a3b applied (no demucs)';
+                        'denoiser + v11a3b applied' : 'v11a3b applied (no denoiser)';
                     
                     // Show results
                     setTimeout(() => {
@@ -1305,8 +1305,8 @@
         }
 
         // Log version info
-        console.log('Roadshow v11a3b + Demucs - API URL:', API_URL);
-        console.log('Pipeline: Demucs → BigVGAN v11a3b');
+        console.log('Roadshow v11a3b + Facebook Denoiser - API URL:', API_URL);
+        console.log('Pipeline: Facebook Denoiser → BigVGAN v11a3b');
         console.log('Server port: 8003');
     </script>
 </body>
